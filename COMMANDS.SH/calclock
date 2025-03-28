@@ -21,7 +21,7 @@
 #             =forcible ... Line-buffered mode or exit if impossible
 #
 # Designed originally by Nobuaki Tounaka
-# Written by Shell-Shoccar Japan (@shellshoccarjpn) on 2022-07-18
+# Written by Shell-Shoccar Japan (@shellshoccarjpn) on 2025-03-28
 #
 # This is a public-domain software (CC0). It means that all of the
 # people can use this for any purposes with no restrictions at all.
@@ -64,7 +64,7 @@ print_usage_and_exit() {
 	Environs: LINE_BUFFERED
 	            =yes ........ Line-buffered mode if possible
 	            =forcible ... Line-buffered mode or exit if impossible
-	Version : 2022-07-18 01:13:48 JST
+	Version : 2025-03-28 19:10:37 JST
 	          Open usp Tukubai (POSIX Bourne Shell/POSIX commands)
 	USAGE
   exit 1
@@ -381,7 +381,7 @@ function unixtime2YYYYMMDDhhmmss(ut, dp,Y,M,D,h,m,s,t,i,j) {
   } else if (i> 1) {dp=substr(ut,i);ut=substr(ut,1,i-1);
   } else           {dp=ut;          ut=0;               }
   ut += offset;
-  if (ut < 0) {return -1;}
+  if (ut < 0) {return unixtime2YYYYMMDDhhmmss_neg(ut);}
   # 1) calculate hour,minute,second and number of days from the Epoch
   s = ut % 60;  t = int(ut/60);
   m =  t % 60;  t = int( t/60);
@@ -413,6 +413,41 @@ function unixtime2YYYYMMDDhhmmss(ut, dp,Y,M,D,h,m,s,t,i,j) {
     }
   }
   return sprintf("%04d%02d%02d%02d%02d%02d%s",Y,M,D,h,m,s,dp);
+}
+function unixtime2YYYYMMDDhhmmss_neg(ut, Y,M,D,h,m,s,t,i,j) {
+  # 0) timezone adjustment
+  ut += offset;
+  # 1) calculate hour,minute,second and number of days from the Epoch
+  s = (ut%60+60)%60;  t = (ut-s)/60;
+  m = ( t%60+60)%60;  t = ( t-m)/60;
+  h = ( t%24+24)%24;
+  days_from_epoch = ( t-h)/24;
+  # 2) calculate year
+  Y = int(days_from_epoch/365.2425)+1970-1;
+  if (Y < min_calced_year) {
+     i = days_on_Jan1st_from_epoch[min_calced_year];
+     for (j=min_calced_year-1; j>=Y; j--) {
+       i -= (j%4!=0)?365:(j%100!=0)?366:(j%400!=0)?365:366;
+       days_on_Jan1st_from_epoch[j] = i;
+     }
+     min_calced_year = Y;
+  }
+  for (;;Y--) {
+    if (days_from_epoch >= days_on_Jan1st_from_epoch[Y]) {
+      break;
+    }
+  }
+  # 3) calculate month,day
+  days_of_month[2] = (Y%4!=0)?28:(Y%100!=0)?29:(Y%400!=0)?28:29;
+  D = days_from_epoch - days_on_Jan1st_from_epoch[Y] + 1;
+  for (M=1; ; M++) {
+    if (D > days_of_month[M]) {
+      D -= days_of_month[M];
+    } else {
+      break;
+    }
+  }
+  return sprintf("%04d%02d%02d%02d%02d%02d",Y,M,D,h,m,s);
 }
 function YYYYMMDDhhmmss2unixtime(YYYYMMDDhhmmss, dp,Y,M,D,h,m,s,l) {
   # 1) seperate the units
