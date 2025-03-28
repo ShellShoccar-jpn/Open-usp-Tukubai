@@ -64,7 +64,7 @@ print_usage_and_exit() {
 	Environs: LINE_BUFFERED
 	            =yes ........ Line-buffered mode if possible
 	            =forcible ... Line-buffered mode or exit if impossible
-	Version : 2025-03-28 19:10:37 JST
+	Version : 2025-03-28 19:30:07 JST
 	          Open usp Tukubai (POSIX Bourne Shell/POSIX commands)
 	USAGE
   exit 1
@@ -363,6 +363,7 @@ function convert_marked_flds( fld) {
 }
 function YYYYMMDDhhmmss2unixtime_prep(localtime_flag, gm,lo) {
   max_calced_year = 1970;              # To remember every days on 01/01 from
+  min_calced_year = 1970;              # To remember every days on 01/01 from
   days_on_Jan1st_from_epoch[1970] = 0; # the Epoch which was calculated once
   split("31 0 31 30 31 30 31 31 30 31 30 31", days_of_month);
   if (localtime_flag == "LOCALTIME") {
